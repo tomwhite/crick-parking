@@ -41,11 +41,20 @@ def get_trace(df, date):
         ticket_end = get_ticket_end(ticket_start, x[1])
         ts[ticket_start], ts[ticket_end] = 1, 0
         per_car_timeseries.append(ts)
-    return traces.TimeSeries.merge(per_car_timeseries, operation=sum, compact=True)
+    ret = traces.TimeSeries.merge(per_car_timeseries, operation=sum, compact=True)
+    return ret
+
+
+def max_for_date(df, date):
+    trace = get_trace(df, date)
+    if len(trace) == 0:
+        print("No data for ", date)
+        return 0
+    return trace.distribution(normalized=False).max()
 
 
 # Load data
-df = pd.read_csv("~/Downloads/Transaction Report 010119 to 310519.csv", parse_dates=["Date"])
+df = pd.read_csv("~/Downloads/Transaction Report 010119 to 310519.csv", parse_dates=["Date"], dayfirst=True)
 
 # filter out overnight
 df = df[~df['Tariff'].isin(['105DA', '105M', '105U'])]
@@ -53,36 +62,20 @@ df = df[~df['Tariff'].isin(['105DA', '105M', '105U'])]
 # add ticket duration
 df['duration'] = df['Description.1'].str.extract('(1 Hour|2 Hour|4 Hour|All Day)', expand=True)
 
-# sort by date (there are two ticket machines)
+# sort by date (there are two ticket machines, so input isn't chronological)
 df = df.sort_values(by=["Date"])
 
 # Show ticket duration counts
 x = df.groupby(['duration']).size().reset_index(name='counts')
 print(x)
 
+# Find the date on which the max occupancy occurred
+r = pd.date_range(pd.Timestamp(2019, 1, 1), pd.Timestamp(2019, 5, 10))
+date_of_max = max(r, key=lambda date: max_for_date(df, date))
+print(date_of_max, max_for_date(df, date_of_max))
 
 # Get trace for a given date
-trace = get_trace(df, pd.Timestamp(2019, 2, 1))
-
-dist = trace.distribution(normalized=False)
-print("mean", dist.mean())
-print("max", dist.max())
-
-trace = get_trace(df, pd.Timestamp(2019, 2, 2))
-
-dist = trace.distribution(normalized=False)
-print("mean", dist.mean())
-print("max", dist.max())
-
-range = pd.date_range(pd.Timestamp(2019, 2, 1), pd.Timestamp(2019, 3, 1))
-print(range)
-
+trace = get_trace(df, pd.Timestamp(2019, 5, 4))
 series = to_pandas_series(trace)
 series.plot()
 plt.show()
-
-# TODO
-# turn x into pandas series and then plot DONE
-# pull out ticket duration DONE
-# find day with max
-# what is average occupancy over opening times?
