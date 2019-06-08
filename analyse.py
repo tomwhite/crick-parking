@@ -1,6 +1,7 @@
 import datetime
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 import traces
 
 
@@ -69,13 +70,30 @@ df = df.sort_values(by=["Date"])
 x = df.groupby(['duration']).size().reset_index(name='counts')
 print(x)
 
+# print(df)
+#
+# print(df.info())
+#
+# df['hour'] = df['Date'].apply(lambda x: x.hour)
+#
+# print(df)
+#
+# #sns.distplot(df['hour'], hist=True, kde=False, bins=24, hist_kws={'edgecolor':'black'})
+#
+# sns.countplot(x="hour", data=df)
+#
+# plt.show()
+#
+# import sys
+# sys.exit(1)
+
 # Find the date on which the max occupancy occurred
 r = pd.date_range(pd.Timestamp(2019, 1, 1), pd.Timestamp(2019, 5, 10))
 date_of_max = max(r, key=lambda date: max_for_date(df, date))
 print(date_of_max, max_for_date(df, date_of_max))
 
 # Get trace for a given date
-trace = get_trace(df, pd.Timestamp(2019, 5, 4))
+trace = get_trace(df, pd.Timestamp(2019, 5, 23))
 series = to_pandas_series(trace)
 series.plot()
 plt.show()
