@@ -1,0 +1,73 @@
+---
+title: "Crickhowell Car Park Analysis"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r include = FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r message=FALSE, warning=FALSE}
+
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(scales)
+library(stringr)
+library(tidyr)
+
+carpark_raw <- read.csv("~/Downloads/Transaction Report 010119 to 310519.csv", header=TRUE, stringsAsFactors = FALSE, strip.white=TRUE)
+
+carpark <- carpark_raw %>%
+  mutate(dt = dmy_hm(Date)) %>%
+  mutate(day = weekdays(dt)) %>%
+  mutate(hour = hour(dt)) %>%
+  mutate(month = month(dt))
+
+carpark$day <- factor(carpark$day, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))
+```
+
+Which tickets are the most popular? 2 hour ones:
+
+```{r}
+# Freq: 2hr, 1hr, 4hr, all day
+carpark %>% group_by(Tariff, Description.1) %>% tally(sort = TRUE)
+```
+
+During which months is the car park most busy? It's busier in summer than winter.
+
+```{r}
+carpark %>% group_by(month) %>% tally(sort = TRUE)
+```
+
+Which days of week are the most busy? Saturday is the busiest.
+
+```{r}
+carpark %>% group_by(day) %>% tally(sort = TRUE)
+```
+
+At what time of day do people buy tickets? 11-12 in the morning is the busiest.
+
+```{r}
+ggplot(carpark, aes(hour)) +
+  geom_histogram(binwidth=1)
+```
+
+Broken down by day.
+
+```{r}
+ggplot(carpark, aes(hour)) +
+  geom_histogram(binwidth=1) +
+  facet_wrap(~ day, ncol=4)
+```
+  
+Broken down by month.
+  
+```{r}
+ggplot(carpark, aes(hour)) +
+  geom_histogram(binwidth=1) +
+  facet_wrap(~ month, ncol=4)
+```
