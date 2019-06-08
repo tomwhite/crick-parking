@@ -74,6 +74,8 @@ dist = trace.distribution(normalized=False)
 print("mean", dist.mean())
 print("max", dist.max())
 
+range = pd.date_range(pd.Timestamp(2019, 2, 1), pd.Timestamp(2019, 3, 1))
+print(range)
 
 series = to_pandas_series(trace)
 series.plot()
