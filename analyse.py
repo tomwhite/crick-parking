@@ -1,5 +1,6 @@
 import datetime
 import matplotlib.pyplot as plt
+import os
 import pandas as pd
 import seaborn as sns
 import traces
@@ -70,6 +71,39 @@ def get_tickets_in_window(rolling, date, hour=12):
     return rolling.loc[date + pd.Timedelta(hours=hour)].iloc[0]
 
 
+def open_file(filename, mode="r"):
+    if filename.startswith("gs://"):
+        fs = gcsfs.GCSFileSystem(token="google_default")
+        return fs.open(filename, mode)
+    else:
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        return open(filename, mode)
+
+
+def plot(df, date):
+    # Get trace for a given date
+    trace = get_trace(df, date)
+    series = to_pandas_series(trace)
+    ax = series.plot()
+
+    # Get rolling counts for a given date and plot on same figure
+    rolling = get_rolling(df, date)
+    rolling.plot(ax=ax, secondary_y=True)
+
+    # Remove unnecessary labels
+    ax.get_legend().remove()
+    ax.xaxis.set_label_text("")
+
+    out_dir = "out"
+    day_dir = date.strftime('%Y/%m/%d')
+    filename = "{}/{}/plot.png".format(out_dir, day_dir)
+    with open_file(filename, "wb") as figfile:
+        # pad_inches will remove padding around the image
+        plt.savefig(figfile, format="png", bbox_inches="tight", pad_inches=0)
+        plt.close()
+
+
+
 # Load data
 df = pd.read_csv("~/Downloads/Transaction Report 010119 to 310519.csv", parse_dates=["Date"], dayfirst=True)
 
@@ -108,23 +142,18 @@ interesting_date = pd.Timestamp(2019, 2, 10) # Sunday; filled up v quickly, then
 interesting_date = pd.Timestamp(2019, 5, 4) # max capacity
 interesting_date = pd.Timestamp(2019, 4, 4) # boring Thursday in April
 
-# Find the date on which the max occupancy occurred
-r = pd.date_range(pd.Timestamp(2019, 1, 1), pd.Timestamp(2019, 5, 10))
-date_of_max = max(r, key=lambda date: max_for_date(df, date))
-print(date_of_max, max_for_date(df, date_of_max))
-
-# Get trace for a given date
-trace = get_trace(df, interesting_date)
-series = to_pandas_series(trace)
-ax = series.plot()
+# # Find the date on which the max occupancy occurred
+# r = pd.date_range(pd.Timestamp(2019, 1, 1), pd.Timestamp(2019, 5, 10))
+# date_of_max = max(r, key=lambda date: max_for_date(df, date))
+# print(date_of_max, max_for_date(df, date_of_max))
 
 # # Find number of ticket sales in midday 30 min slot
 # for date in r:
 #     rolling = get_rolling(df, date)
 #     print(date, get_tickets_in_window(rolling, date))
 
-# Get rolling counts for a given date and plot on same figure
-rolling = get_rolling(df, interesting_date)
-rolling.plot(ax=ax, secondary_y=True)
+r = pd.date_range(pd.Timestamp(2019, 4, 1), pd.Timestamp(2019, 4, 5))
+for d in r:
+    plot(df, d)
 
-plt.show()
+#plt.show()
