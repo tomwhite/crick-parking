@@ -66,7 +66,7 @@ def get_rolling(df, date, window='30T'):
     return events.rolling(window).sum()
 
 
-def get_tickets_in_window(rolling, hour=12):
+def get_tickets_in_window(rolling, date, hour=12):
     return rolling.loc[date + pd.Timedelta(hours=hour)].iloc[0]
 
 
@@ -109,12 +109,17 @@ date_of_max = max(r, key=lambda date: max_for_date(df, date))
 print(date_of_max, max_for_date(df, date_of_max))
 
 # Get trace for a given date
-trace = get_trace(df, pd.Timestamp(2019, 5, 23))
+trace = get_trace(df, pd.Timestamp(2019, 5, 4))
 series = to_pandas_series(trace)
 series.plot()
 
+# # Find number of ticket sales in midday 30 min slot
+# for date in r:
+#     rolling = get_rolling(df, date)
+#     print(date, get_tickets_in_window(rolling, date))
+
 # # Get rolling counts for a given date
-# rolling = get_rolling(df, pd.Timestamp(2019, 5, 23))
+# rolling = get_rolling(df, pd.Timestamp(2019, 5, 4))
 # rolling.plot()
 
 plt.show()
