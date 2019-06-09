@@ -83,12 +83,26 @@ def open_file(filename, mode="r"):
 def plot(df, date):
     # Get trace for a given date
     trace = get_trace(df, date)
+    if len(trace) == 0:
+        return ""
     series = to_pandas_series(trace)
-    ax = series.plot()
+    ax = series.plot(figsize=(2.5, 1.7))
+
+    # Make axes consistent
+    ax.set_ylim(0, 170)
 
     # Get rolling counts for a given date and plot on same figure
     rolling = get_rolling(df, date)
-    rolling.plot(ax=ax, secondary_y=True)
+    ax2 = rolling.plot(ax=ax, secondary_y=True)
+
+    ax.set_xlim(date + pd.Timedelta(hours=7), date + pd.Timedelta(hours=18))
+    ax2.set_ylim(0, 40)
+
+    # TODO: fix hour labels
+    # See https://stackoverflow.com/questions/33743394/matplotlib-dateformatter-for-axis-label-not-working
+    # from matplotlib.dates import HourLocator, DateFormatter
+    # ax2.xaxis.set_major_locator(HourLocator(interval=2)) # tick every two hours
+    # ax2.xaxis.set_major_formatter(DateFormatter('%H'))
 
     # Remove unnecessary labels
     ax.get_legend().remove()
@@ -102,6 +116,7 @@ def plot(df, date):
         plt.savefig(figfile, format="png", bbox_inches="tight", pad_inches=0)
         plt.close()
 
+    return '<img src="{}"/>'.format(filename)
 
 
 # Load data
@@ -152,8 +167,57 @@ interesting_date = pd.Timestamp(2019, 4, 4) # boring Thursday in April
 #     rolling = get_rolling(df, date)
 #     print(date, get_tickets_in_window(rolling, date))
 
-r = pd.date_range(pd.Timestamp(2019, 4, 1), pd.Timestamp(2019, 4, 5))
-for d in r:
-    plot(df, d)
+r = pd.date_range(pd.Timestamp(2019, 4, 1), pd.Timestamp(2019, 4, 30))
+
+with open("index.html", 'w') as f:
+    f.write("""<html>
+    <head>
+    <title>Crick Car Park Usage</title>
+        <style>
+            body {
+                font-family: DejaVuSans, sans-serif;
+            }
+            th {
+                font-weight: normal;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+    <table>
+        <tr>
+            <th></th>
+            <th>Monday</th>
+            <th>Tuesday</th>
+            <th>Wednesday</th>
+            <th>Thursday</th>
+            <th>Friday</th>
+            <th>Saturday</th>
+            <th>Sunday</th>
+        </tr>
+    <tr>
+    """)
+
+    if r[0].weekday() > 0:
+        f.write("<td>{}</td>".format(r[0].strftime('%d/%m/%Y')))
+        for _ in range(r[0].weekday()):
+            f.write("<td/>\n")
+
+    for d in r:
+        if d.weekday() == 0:
+            f.write("<td>{}</td>".format(d.strftime('%d/%m/%Y')))
+        img = plot(df, d)
+        f.write("<td>{}</td>\n".format(img))
+        if d.weekday() == 6:
+            f.write("</tr>\n")
+
+    if d.weekday() != 6:
+        f.write("</tr>\n")
+    f.write("""
+    </table>
+    </body>
+    </html>
+    """)
+
 
 #plt.show()
