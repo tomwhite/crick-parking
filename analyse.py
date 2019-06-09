@@ -103,23 +103,28 @@ print(x)
 # import sys
 # sys.exit(1)
 
+# Interesting dates
+interesting_date = pd.Timestamp(2019, 2, 10) # Sunday; filled up v quickly, then sales stopped suddenly
+interesting_date = pd.Timestamp(2019, 5, 4) # max capacity
+interesting_date = pd.Timestamp(2019, 4, 4) # boring Thursday in April
+
 # Find the date on which the max occupancy occurred
 r = pd.date_range(pd.Timestamp(2019, 1, 1), pd.Timestamp(2019, 5, 10))
 date_of_max = max(r, key=lambda date: max_for_date(df, date))
 print(date_of_max, max_for_date(df, date_of_max))
 
 # Get trace for a given date
-trace = get_trace(df, pd.Timestamp(2019, 5, 4))
+trace = get_trace(df, interesting_date)
 series = to_pandas_series(trace)
-series.plot()
+ax = series.plot()
 
 # # Find number of ticket sales in midday 30 min slot
 # for date in r:
 #     rolling = get_rolling(df, date)
 #     print(date, get_tickets_in_window(rolling, date))
 
-# # Get rolling counts for a given date
-# rolling = get_rolling(df, pd.Timestamp(2019, 5, 4))
-# rolling.plot()
+# Get rolling counts for a given date and plot on same figure
+rolling = get_rolling(df, interesting_date)
+rolling.plot(ax=ax, secondary_y=True)
 
 plt.show()
