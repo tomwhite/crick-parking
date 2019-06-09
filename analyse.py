@@ -182,6 +182,7 @@ df = pd.read_csv("~/Downloads/Transaction Report 010119 to 310519.csv", parse_da
 df = df[~df['Tariff'].isin(['105DA', '105M', '105U'])]
 
 # add ticket duration
+df = df[df['Description.1'].notnull()]
 df['duration'] = df['Description.1'].str.extract('(1 Hour|2 Hour|4 Hour|All Day)', expand=True)
 
 # sort by date (there are two ticket machines, so input isn't chronological)
@@ -228,7 +229,7 @@ interesting_date = pd.Timestamp(2019, 4, 4) # boring Thursday in April
 # month_plots(df, "february.html", pd.date_range(pd.Timestamp(2019, 2, 1), pd.Timestamp(2019, 2, 28)))
 # month_plots(df, "march.html", pd.date_range(pd.Timestamp(2019, 3, 1), pd.Timestamp(2019, 3, 31)))
 # month_plots(df, "april.html", pd.date_range(pd.Timestamp(2019, 4, 1), pd.Timestamp(2019, 4, 30)))
-# month_plots(df, "may.html", pd.date_range(pd.Timestamp(2019, 5, 1), pd.Timestamp(2019, 5, 31)))
+#month_plots(df, "may.html", pd.date_range(pd.Timestamp(2019, 5, 1), pd.Timestamp(2019, 5, 31)))
 
 #plot(df, interesting_date, write_file=False)
 #plt.show()
