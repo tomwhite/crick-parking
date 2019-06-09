@@ -80,7 +80,7 @@ def open_file(filename, mode="r"):
         return open(filename, mode)
 
 
-def plot(df, date):
+def plot(df, date, write_file=True):
     # Get trace for a given date
     trace = get_trace(df, date)
     if len(trace) == 0:
@@ -108,15 +108,71 @@ def plot(df, date):
     ax.get_legend().remove()
     ax.xaxis.set_label_text("")
 
-    out_dir = "out"
-    day_dir = date.strftime('%Y/%m/%d')
-    filename = "{}/{}/plot.png".format(out_dir, day_dir)
-    with open_file(filename, "wb") as figfile:
-        # pad_inches will remove padding around the image
-        plt.savefig(figfile, format="png", bbox_inches="tight", pad_inches=0)
-        plt.close()
+    if write_file:
 
-    return '<img src="{}"/>'.format(filename)
+        out_dir = "out"
+        day_dir = date.strftime('%Y/%m/%d')
+        filename = "{}/{}/plot.png".format(out_dir, day_dir)
+        with open_file(filename, "wb") as figfile:
+            # pad_inches will remove padding around the image
+            plt.savefig(figfile, format="png", bbox_inches="tight", pad_inches=0)
+            plt.close()
+
+        return '<img src="{}"/>'.format(filename)
+
+
+def month_plots(df, file_name, date_range):
+
+    with open(file_name, 'w') as f:
+        f.write("""<html>
+        <head>
+        <title>Crick Car Park Usage</title>
+            <style>
+                body {
+                    font-family: DejaVuSans, sans-serif;
+                }
+                th {
+                    font-weight: normal;
+                    text-align: center;
+                }
+            </style>
+        </head>
+        <body>
+        <table>
+            <tr>
+                <th></th>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+                <th>Saturday</th>
+                <th>Sunday</th>
+            </tr>
+        <tr>
+        """)
+
+        first = date_range[0]
+        if first.weekday() > 0:
+            f.write("<td>{}</td>".format(first.strftime('%d/%m/%Y')))
+            for _ in range(first.weekday()):
+                f.write("<td/>\n")
+
+        for d in date_range:
+            if d.weekday() == 0:
+                f.write("<td>{}</td>".format(d.strftime('%d/%m/%Y')))
+            img = plot(df, d)
+            f.write("<td>{}</td>\n".format(img))
+            if d.weekday() == 6:
+                f.write("</tr>\n")
+
+        if d.weekday() != 6:
+            f.write("</tr>\n")
+        f.write("""
+        </table>
+        </body>
+        </html>
+        """)
 
 
 # Load data
@@ -167,57 +223,12 @@ interesting_date = pd.Timestamp(2019, 4, 4) # boring Thursday in April
 #     rolling = get_rolling(df, date)
 #     print(date, get_tickets_in_window(rolling, date))
 
-r = pd.date_range(pd.Timestamp(2019, 4, 1), pd.Timestamp(2019, 4, 30))
 
-with open("index.html", 'w') as f:
-    f.write("""<html>
-    <head>
-    <title>Crick Car Park Usage</title>
-        <style>
-            body {
-                font-family: DejaVuSans, sans-serif;
-            }
-            th {
-                font-weight: normal;
-                text-align: center;
-            }
-        </style>
-    </head>
-    <body>
-    <table>
-        <tr>
-            <th></th>
-            <th>Monday</th>
-            <th>Tuesday</th>
-            <th>Wednesday</th>
-            <th>Thursday</th>
-            <th>Friday</th>
-            <th>Saturday</th>
-            <th>Sunday</th>
-        </tr>
-    <tr>
-    """)
+# month_plots(df, "january.html", pd.date_range(pd.Timestamp(2019, 1, 1), pd.Timestamp(2019, 1, 31)))
+# month_plots(df, "february.html", pd.date_range(pd.Timestamp(2019, 2, 1), pd.Timestamp(2019, 2, 28)))
+# month_plots(df, "march.html", pd.date_range(pd.Timestamp(2019, 3, 1), pd.Timestamp(2019, 3, 31)))
+# month_plots(df, "april.html", pd.date_range(pd.Timestamp(2019, 4, 1), pd.Timestamp(2019, 4, 30)))
+# month_plots(df, "may.html", pd.date_range(pd.Timestamp(2019, 5, 1), pd.Timestamp(2019, 5, 31)))
 
-    if r[0].weekday() > 0:
-        f.write("<td>{}</td>".format(r[0].strftime('%d/%m/%Y')))
-        for _ in range(r[0].weekday()):
-            f.write("<td/>\n")
-
-    for d in r:
-        if d.weekday() == 0:
-            f.write("<td>{}</td>".format(d.strftime('%d/%m/%Y')))
-        img = plot(df, d)
-        f.write("<td>{}</td>\n".format(img))
-        if d.weekday() == 6:
-            f.write("</tr>\n")
-
-    if d.weekday() != 6:
-        f.write("</tr>\n")
-    f.write("""
-    </table>
-    </body>
-    </html>
-    """)
-
-
+#plot(df, interesting_date, write_file=False)
 #plt.show()
