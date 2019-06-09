@@ -54,6 +54,22 @@ def max_for_date(df, date):
     return trace.distribution(normalized=False).max()
 
 
+def get_rolling(df, date, window='30T'):
+    end_date = date + pd.Timedelta(days=1)
+    single_date_df = df[(df['Date'] >= date) & (df['Date'] < end_date)]
+    # restrict to Date field
+    events = single_date_df[["Date"]]
+    events['x'] = 1
+    # resample every minute
+    events = events.resample('1T', on='Date').sum()
+    # calculate rolling counts
+    return events.rolling(window).sum()
+
+
+def get_tickets_in_window(rolling, hour=12):
+    return rolling.loc[date + pd.Timedelta(hours=hour)].iloc[0]
+
+
 # Load data
 df = pd.read_csv("~/Downloads/Transaction Report 010119 to 310519.csv", parse_dates=["Date"], dayfirst=True)
 
@@ -96,4 +112,9 @@ print(date_of_max, max_for_date(df, date_of_max))
 trace = get_trace(df, pd.Timestamp(2019, 5, 23))
 series = to_pandas_series(trace)
 series.plot()
+
+# # Get rolling counts for a given date
+# rolling = get_rolling(df, pd.Timestamp(2019, 5, 23))
+# rolling.plot()
+
 plt.show()
