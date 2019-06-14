@@ -10,6 +10,8 @@ output:
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
+_Tom White and Eliane Wigzell, June 2019_
+
 We analysed ticket data for the two machines in Crickhowell's Long Stay car park from January to May 2019.
 
 ## Summary
@@ -105,6 +107,7 @@ library(lubridate)
 library(scales)
 library(stringr)
 library(tidyr)
+library(knitr)
 
 carpark_raw <- read.csv("~/Downloads/Transaction Report 010119 to 310519.csv", header=TRUE, stringsAsFactors = FALSE, strip.white=TRUE)
 
@@ -122,57 +125,57 @@ Which tickets are the most popular? 2 hour ones:
 
 ```{r}
 # Freq: 2hr, 1hr, 4hr, all day
-carpark %>% group_by(Tariff, Description.1) %>% tally(sort = TRUE)
+kable(carpark %>% group_by(Tariff, Description.1) %>% tally(sort = TRUE))
 ```
 
 Average tickets sold by day:
 
 ```{r}
-carpark %>% group_by(date, day) %>% summarize(count=n()) %>% group_by(day) %>% summarise(average = mean(count))
+kable(carpark %>% group_by(date, day) %>% summarize(count=n()) %>% group_by(day) %>% summarise(average = mean(count)))
 ```
 
 Average number of all day tickets sold per day:
 
 ```{r}
-carpark %>%
+kable(carpark %>%
   filter(Tariff == '105D') %>%
   group_by(date, day) %>%
   summarize(count=n()) %>%
   group_by(day) %>%
-  summarise(average = mean(count))
+  summarise(average = mean(count)))
 ```
 
 Overall:
 
 ```{r}
-carpark %>%
+kable(carpark %>%
   filter(Tariff == '105D') %>%
   group_by(date) %>%
   summarize(count=n()) %>%
-  summarise(average = mean(count))
+  summarise(average = mean(count)))
 ```
 
 Average number of all day tickets sold per day before midday - shows that most are bought in the morning.
 
 ```{r}
-carpark %>%
+kable(carpark %>%
   filter(Tariff == '105D' & hour < 12) %>%
   group_by(date, day) %>%
   summarize(count=n()) %>%
   group_by(day) %>%
-  summarise(average = mean(count))
+  summarise(average = mean(count)))
 ```
 
 During which months is the car park most busy? It's busier in summer than in winter.
 
 ```{r}
-carpark %>% group_by(month) %>% tally(sort = TRUE)
+kable(carpark %>% group_by(month) %>% tally(sort = TRUE))
 ```
 
 Which days of week are the most busy? Saturday is the busiest.
 
 ```{r}
-carpark %>% group_by(day) %>% tally(sort = TRUE)
+kable(carpark %>% group_by(day) %>% tally(sort = TRUE))
 ```
 
 At what time of day do people buy tickets? 12-1pm is the busiest hour.
