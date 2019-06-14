@@ -19,22 +19,22 @@ Our key findings are:
 1. The most popular ticket is the 2 hour ticket, followed by the 1 hour ticket.
 2. Most tickets are sold between 12 and 1pm.
 3. Saturdays are the busiest day of the week, with 15% more tickets being sold than Fridays (the next busiest day).
-4. The car park is very likely to be overcrowed on Saturdays and Bank Holidays, especially in good weather.
+4. The car park is very likely to be overcrowded on Saturdays and Bank Holidays, especially in good weather.
 5. Monthly usage increases through the year, with May being 50% busier than January.
 
 ## Approach
 
-The summary statistics for ticket popularity, and busy times were performed with standard statistical analysis (see the end of this document). For analysing overcrowding we carried out a more involved analysis described next.
+The summary statistics for ticket popularity, and busy times were performed with standard statistical analysis (see appendix). For analysing overcrowding we carried out a more involved analysis described next.
 
-Each ticket sold is one of: 1 hour, 2 hour, 4 hour, all day - for cars. We ignored tickets for other categories of vehicle since they are tiny in comparison with those for cars.
+Each ticket sold is one of: 1 hour, 2 hour, 4 hour, all day - for cars. We ignored tickets for other categories of vehicle since the numbers are tiny in comparison with those for cars.
 
-We considered the period from 8am to 6pm, since this is when charges apply. We made the simplifying assumption that each ticket was used for the full amount of time allowed, so for example a 2 hour ticket would be used for 2 hours. Of course, this is not a realistic assmption, since it overcounts vehicles that leave before the ticket expires. On the other hand, it undercounts vehicles that overstay, or those with no ticket at all. It's not possible to estimate the relative importance of these two effects without further information (such as data from spot surveys).
+We considered the period from 8am to 6pm, since this is when charges apply. We made the simplifying assumption that each ticket was used for the full amount of time allowed, so for example a 2 hour ticket would be used for the full 2 hours. Of course, this is not a realistic assumption, since it overcounts vehicles that leave before the ticket expires. On the other hand, it undercounts vehicles that overstay, or those with no ticket at all. It's not possible to estimate the relative importance of these two effects without further information (such as data from spot surveys).
 
 With this assumption we created graphs showing the estimated number of cars in the car park over a day. (The blue lines in the graphs.) 
 
 We also looked at the rate of ticket sales over a short period of time (typically 30 minutes) and plotted this on the same graph (as an orange line).
 
-For example, here is the graph for 4 April:
+For example, here is the graph for Thursday 4 April:
 
 ![Crickhowell Car Park, 4 April 2019](out/2019/04/04/plot.png)
 
@@ -46,7 +46,7 @@ Compare this with the graph for the late May Bank Holiday:
 
 ![Crickhowell Car Park, 27 May 2019](out/2019/05/27/plot.png)
 
-It's clear that the car park was a lot busier on this day, as the peak estimated occupancy was around 140. (There are only 130 spaces, so the assumption that everyone stayed for the full time on their ticket must have broken down.) Notice the rapid drop in the orange line at midday, from over 40 tickets being sold per 30 minute period, to 10 tickets being sold per 30 minute period. Since the estimated occupancy was around 120 at this time, this rapid drop can be interpreted as the car park being full.
+It's clear that the car park was a lot busier on this day, as the peak estimated occupancy was around 140. (There are only 130 spaces, so the modelling assumption that everyone stayed for the full time on their ticket is clearly not true.) Notice the rapid drop in the orange line at midday, from over 40 tickets being sold per 30 minute period, to 10 tickets being sold per 30 minute period. Since the estimated occupancy was around 120 at this time, this rapid drop can be interpreted as the car park being full.
 
 The key insight here is that we can detect when the car park is full by looking for very rapid drops in ticket sales.
 
@@ -61,27 +61,31 @@ From a visual scan of graphs for the data set, this happened on the following da
 * Friday, 22 February
 * Saturday, 6 April
 * Saturday, 11 April
-* Friday, 19 April
-* Saturday, 20 April
-* Saturday, 4 May
+* Friday, 19 April (Easter)
+* Saturday, 20 April (Easter)
+* Saturday, 4 May (Bank Holiday weekend)
 * Tuesday, 7 May
 * Friday, 10 May
 * Tuesday, 14 May
 * Saturday, 18 May
-* Saturday, 25 May
-* Monday, 27 May
+* Saturday, 25 May (Bank Holiday weekend)
+* Monday, 27 May (Bank Holiday weekend)
 
 Most are Saturdays, but Fridays are busy too.
 
 ## Weather
 
-Crickhowell had heavy snow on 1 February, and it shows in very light car park usage:
+Crickhowell had heavy snow on 1 February (a Friday), and it shows in very light car park usage:
 
 ![Crickhowell Car Park, 1 February 2019](out/2019/02/01/plot.png)
 
-And on 3 March Storm Freya hit, so few people ventured in to town:
+And on Sunday 3 March Storm Freya hit, so few people ventured in to town:
 
 ![Crickhowell Car Park, 3 March 2019](out/2019/03/03/plot.png)
+
+A week later the usage was back to normal:
+
+![Crickhowell Car Park, 10 March 2019](out/2019/03/10/plot.png)
 
 ## Limitations
 
@@ -90,7 +94,7 @@ And on 3 March Storm Freya hit, so few people ventured in to town:
 3. Some people don't buy a ticket at all.
 4. Since the machines only log tickets sold, there is no way to discover how full the car park actually is at any particular time. 
 
-## Statistical Analysis
+## Appendix: Statistical Analysis
 
 ```{r message=FALSE, warning=FALSE}
 
@@ -119,7 +123,7 @@ Which tickets are the most popular? 2 hour ones:
 carpark %>% group_by(Tariff, Description.1) %>% tally(sort = TRUE)
 ```
 
-During which months is the car park most busy? It's busier in summer than winter.
+During which months is the car park most busy? It's busier in summer than in winter.
 
 ```{r}
 carpark %>% group_by(month) %>% tally(sort = TRUE)
