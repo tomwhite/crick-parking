@@ -80,13 +80,17 @@ def open_file(filename, mode="r"):
         return open(filename, mode)
 
 
-def plot(df, date, write_file=True):
+def plot(df, date, write_file=True, small=True):
     # Get trace for a given date
     trace = get_trace(df, date)
     if len(trace) == 0:
         return ""
     series = to_pandas_series(trace)
-    ax = series.plot(figsize=(2.5, 1.7))
+
+    if small:
+        ax = series.plot(figsize=(2.5, 1.7))
+    else:
+        ax = series.plot()
 
     # Make axes consistent
     ax.set_ylim(0, 170)
@@ -112,7 +116,10 @@ def plot(df, date, write_file=True):
 
         out_dir = "out"
         day_dir = date.strftime('%Y/%m/%d')
-        filename = "{}/{}/plot.png".format(out_dir, day_dir)
+        if small:
+            filename = "{}/{}/plot.png".format(out_dir, day_dir)
+        else:
+            filename = "{}/{}/plot_large.png".format(out_dir, day_dir)
         with open_file(filename, "wb") as figfile:
             # pad_inches will remove padding around the image
             plt.savefig(figfile, format="png", bbox_inches="tight", pad_inches=0)
@@ -233,3 +240,13 @@ interesting_date = pd.Timestamp(2019, 4, 4) # boring Thursday in April
 
 #plot(df, interesting_date, write_file=False)
 #plt.show()
+
+interesting_dates = [
+    pd.Timestamp(2019, 4, 4),
+    pd.Timestamp(2019, 5, 27),
+    pd.Timestamp(2019, 2, 1),
+    pd.Timestamp(2019, 3, 3),
+    pd.Timestamp(2019, 3, 10),
+]
+for date in interesting_dates:
+    plot(df, date, write_file=True, small=False)

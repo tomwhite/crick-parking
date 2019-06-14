@@ -21,6 +21,7 @@ Our key findings are:
 3. Saturdays are the busiest day of the week, with 15% more tickets being sold than Fridays (the next busiest day).
 4. The car park is very likely to be overcrowded on Saturdays and Bank Holidays, especially in good weather.
 5. Monthly usage increases through the year, with May being 50% busier than January.
+6. An average of 25 all day tickets are sold every day, which is 20% of the car park capacity.
 
 ## Approach
 
@@ -36,7 +37,7 @@ We also looked at the rate of ticket sales over a short period of time (typicall
 
 For example, here is the graph for Thursday 4 April:
 
-![Crickhowell Car Park, 4 April 2019](out/2019/04/04/plot.png)
+![Crickhowell Car Park, 4 April 2019](out/2019/04/04/plot_large.png)
 
 The blue line shows the number of cars in the car park (left scale). It starts at zero at 8am, and rises to about 80 just before 2pm, then drops off again.
 
@@ -44,7 +45,7 @@ The orange line shows the number of cars arriving (that tickets were bought for)
 
 Compare this with the graph for the late May Bank Holiday:
 
-![Crickhowell Car Park, 27 May 2019](out/2019/05/27/plot.png)
+![Crickhowell Car Park, 27 May 2019](out/2019/05/27/plot_large.png)
 
 It's clear that the car park was a lot busier on this day, as the peak estimated occupancy was around 140. (There are only 130 spaces, so the modelling assumption that everyone stayed for the full time on their ticket is clearly not true.) Notice the rapid drop in the orange line at midday, from over 40 tickets being sold per 30 minute period, to 10 tickets being sold per 30 minute period. Since the estimated occupancy was around 120 at this time, this rapid drop can be interpreted as the car park being full.
 
@@ -77,15 +78,15 @@ Most are Saturdays, but Fridays are busy too.
 
 Crickhowell had heavy snow on 1 February (a Friday), and it shows in very light car park usage:
 
-![Crickhowell Car Park, 1 February 2019](out/2019/02/01/plot.png)
+![Crickhowell Car Park, 1 February 2019](out/2019/02/01/plot_large.png)
 
 And on Sunday 3 March Storm Freya hit, so few people ventured in to town:
 
-![Crickhowell Car Park, 3 March 2019](out/2019/03/03/plot.png)
+![Crickhowell Car Park, 3 March 2019](out/2019/03/03/plot_large.png)
 
 A week later the usage was back to normal:
 
-![Crickhowell Car Park, 10 March 2019](out/2019/03/10/plot.png)
+![Crickhowell Car Park, 10 March 2019](out/2019/03/10/plot_large.png)
 
 ## Limitations
 
@@ -109,6 +110,7 @@ carpark_raw <- read.csv("~/Downloads/Transaction Report 010119 to 310519.csv", h
 
 carpark <- carpark_raw %>%
   mutate(dt = dmy_hm(Date)) %>%
+  mutate(date = lubridate::date(dt)) %>%
   mutate(day = weekdays(dt)) %>%
   mutate(hour = hour(dt)) %>%
   mutate(month = month(dt))
@@ -121,6 +123,44 @@ Which tickets are the most popular? 2 hour ones:
 ```{r}
 # Freq: 2hr, 1hr, 4hr, all day
 carpark %>% group_by(Tariff, Description.1) %>% tally(sort = TRUE)
+```
+
+Average tickets sold by day:
+
+```{r}
+carpark %>% group_by(date, day) %>% summarize(count=n()) %>% group_by(day) %>% summarise(average = mean(count))
+```
+
+Average number of all day tickets sold per day:
+
+```{r}
+carpark %>%
+  filter(Tariff == '105D') %>%
+  group_by(date, day) %>%
+  summarize(count=n()) %>%
+  group_by(day) %>%
+  summarise(average = mean(count))
+```
+
+Overall:
+
+```{r}
+carpark %>%
+  filter(Tariff == '105D') %>%
+  group_by(date) %>%
+  summarize(count=n()) %>%
+  summarise(average = mean(count))
+```
+
+Average number of all day tickets sold per day before midday - shows that most are bought in the morning.
+
+```{r}
+carpark %>%
+  filter(Tariff == '105D' & hour < 12) %>%
+  group_by(date, day) %>%
+  summarize(count=n()) %>%
+  group_by(day) %>%
+  summarise(average = mean(count))
 ```
 
 During which months is the car park most busy? It's busier in summer than in winter.
