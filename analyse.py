@@ -231,12 +231,8 @@ interesting_date = pd.Timestamp(2019, 4, 4) # boring Thursday in April
 #     rolling = get_rolling(df, date)
 #     print(date, get_tickets_in_window(rolling, date))
 
-
-# month_plots(df, "2019_01.html", pd.date_range(pd.Timestamp(2019, 1, 1), pd.Timestamp(2019, 1, 1) + pd.DateOffset(months=1), closed='left'))
-# month_plots(df, "2019_02.html", pd.date_range(pd.Timestamp(2019, 2, 1), pd.Timestamp(2019, 2, 1) + pd.DateOffset(months=1), closed='left'))
-# month_plots(df, "2019_03.html", pd.date_range(pd.Timestamp(2019, 3, 1), pd.Timestamp(2019, 3, 1) + pd.DateOffset(months=1), closed='left'))
-# month_plots(df, "2019_04.html", pd.date_range(pd.Timestamp(2019, 4, 1), pd.Timestamp(2019, 4, 1) + pd.DateOffset(months=1), closed='left'))
-# month_plots(df, "2019_05.html", pd.date_range(pd.Timestamp(2019, 5, 1), pd.Timestamp(2019, 5, 1) + pd.DateOffset(months=1), closed='left'))
+# for month_start in pd.date_range(pd.Timestamp(2019, 1, 1), pd.Timestamp(2019, 5, 1), freq='MS'): # MS is month start
+#     month_plots(df, "{}.html".format(month_start.strftime('%Y_%m')), pd.date_range(month_start, month_start + pd.DateOffset(months=1), closed='left'))
 
 #plot(df, interesting_date, write_file=False)
 #plt.show()
