@@ -10,9 +10,9 @@ output:
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-_Tom White and Eliane Wigzell, June 2019_
+_Tom White and Eliane Wigzell, July 2019_
 
-We analysed ticket data for the two machines in Crickhowell's Long Stay car park from January to May 2019.
+We analysed ticket data for the two machines in Crickhowell's Long Stay car park from September 2017 to May 2019.
 
 ## Summary
 
@@ -53,7 +53,7 @@ It's clear that the car park was a lot busier on this day, as the peak estimated
 
 The key insight here is that we can detect when the car park is full by looking for very rapid drops in ticket sales.
 
-From a visual scan of graphs for the data set, this happened on the following days:
+From a visual scan of graphs for the data set, this happened on the following days in 2019:
 
 * Friday, 4 January
 * Saturday, 5 January
@@ -108,15 +108,21 @@ library(scales)
 library(stringr)
 library(tidyr)
 library(knitr)
+library(readr)
+library(purrr)
 
-carpark_raw <- read.csv("~/Downloads/Transaction Report 010119 to 310519.csv", header=TRUE, stringsAsFactors = FALSE, strip.white=TRUE)
+carpark_raw <- list.files("data", pattern = "*.csv") %>% 
+    map_df(~read_csv(paste0("data/", .)))
 
 carpark <- carpark_raw %>%
+  mutate(Description.1 = Description_1) %>%
   mutate(dt = dmy_hm(Date)) %>%
   mutate(date = lubridate::date(dt)) %>%
   mutate(day = weekdays(dt)) %>%
   mutate(hour = hour(dt)) %>%
-  mutate(month = month(dt))
+  mutate(month = month(dt)) %>%
+  mutate(year = year(dt)) %>%
+  filter(date >= "2017-09-01") # filter out since some car parks logged the ticket putting it into the wrong category
 
 carpark$day <- factor(carpark$day, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))
 ```
@@ -168,8 +174,15 @@ kable(carpark %>%
 
 During which months is the car park most busy? It's busier in summer than in winter.
 
-```{r}
-kable(carpark %>% group_by(month) %>% tally(sort = TRUE))
+```{r warning=FALSE}
+carpark %>%
+  mutate(month = as.factor(month)) %>%
+  mutate(year = as.factor(year)) %>%
+  group_by(month, year) %>%
+  summarize(count=n()) %>%
+  complete(month, year) %>% # https://stackoverflow.com/questions/11020437/consistent-width-for-geom-bar-in-the-event-of-missing-data
+  ggplot(aes(x=month, y=count, fill=year)) +
+  geom_bar(stat="identity", position=position_dodge())
 ```
 
 Which days of week are the most busy? Saturday is the busiest.
