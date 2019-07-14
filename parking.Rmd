@@ -115,6 +115,7 @@ carpark_raw <- list.files("data", pattern = "*.csv") %>%
     map_df(~read_csv(paste0("data/", .)))
 
 carpark <- carpark_raw %>%
+  distinct() %>% # drop duplicates since in June 2018 one ticket machine had all of its entries repeated
   mutate(Description.1 = Description_1) %>%
   mutate(dt = dmy_hm(Date)) %>%
   mutate(date = lubridate::date(dt)) %>%
@@ -205,11 +206,4 @@ ggplot(carpark, aes(hour)) +
   geom_histogram(binwidth=1) +
   facet_wrap(~ day, ncol=4)
 ```
-  
-Broken down by month.
-  
-```{r}
-ggplot(carpark, aes(hour)) +
-  geom_histogram(binwidth=1) +
-  facet_wrap(~ month, ncol=4)
-```
+

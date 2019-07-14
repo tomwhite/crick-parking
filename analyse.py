@@ -186,9 +186,11 @@ def month_plots(df, file_name, date_range):
 # Load data
 all_files = glob.glob("data/*.csv")
 # all_files = ["~/Downloads/Transaction Report 010119 to 310519.csv"]
-# li = [pd.read_csv(filename, parse_dates=["Date"], dayfirst=True) for filename in all_files]
-# df = pd.concat(li, axis=0, ignore_index=True, sort=False)
-df = pd.read_csv("data/Transaction Report 010617 to 311217.csv", parse_dates=["Date"], dayfirst=True)
+li = [pd.read_csv(filename, parse_dates=["Date"], dayfirst=True) for filename in all_files]
+df = pd.concat(li, axis=0, ignore_index=True, sort=False)
+
+# drop duplicates since in June 2018 one ticket machine had all of its entries repeated
+df = df.drop_duplicates()
 
 # filter out overnight
 df = df[~df['Tariff'].isin(['105DA', '105M', '105U'])]
