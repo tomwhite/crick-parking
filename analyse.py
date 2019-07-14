@@ -1,4 +1,5 @@
 import datetime
+import glob
 import matplotlib.pyplot as plt
 import os
 import pandas as pd
@@ -16,7 +17,7 @@ def get_ticket_end(ticket_start, ticket_duration_str):
     elif ticket_duration_str == 'All Day':
         ticket_end = ticket_start.replace(hour=18, minute=0)
     else:
-        return None
+        raise Exception('Unrecognized ticket duration', ticket_duration_str)
     ticket_end_of_day = ticket_start.replace(hour=18, minute=0)
     if ticket_end > ticket_end_of_day:
         ticket_end = ticket_end_of_day
@@ -183,7 +184,11 @@ def month_plots(df, file_name, date_range):
 
 
 # Load data
-df = pd.read_csv("~/Downloads/Transaction Report 010119 to 310519.csv", parse_dates=["Date"], dayfirst=True)
+all_files = glob.glob("data/*.csv")
+# all_files = ["~/Downloads/Transaction Report 010119 to 310519.csv"]
+# li = [pd.read_csv(filename, parse_dates=["Date"], dayfirst=True) for filename in all_files]
+# df = pd.concat(li, axis=0, ignore_index=True, sort=False)
+df = pd.read_csv("data/Transaction Report 010617 to 311217.csv", parse_dates=["Date"], dayfirst=True)
 
 # filter out overnight
 df = df[~df['Tariff'].isin(['105DA', '105M', '105U'])]
@@ -191,6 +196,7 @@ df = df[~df['Tariff'].isin(['105DA', '105M', '105U'])]
 # add ticket duration
 df = df[df['Description.1'].notnull()]
 df['duration'] = df['Description.1'].str.extract('(1 Hour|2 Hour|4 Hour|All Day)', expand=True)
+df = df[df['duration'].notnull()]
 
 # sort by date (there are two ticket machines, so input isn't chronological)
 df = df.sort_values(by=["Date"])
@@ -231,18 +237,22 @@ interesting_date = pd.Timestamp(2019, 4, 4) # boring Thursday in April
 #     rolling = get_rolling(df, date)
 #     print(date, get_tickets_in_window(rolling, date))
 
+for month_start in pd.date_range(pd.Timestamp(2017, 9, 1), pd.Timestamp(2017, 12, 1), freq='MS'): # MS is month start
+    print(month_start)
+    month_plots(df, "{}.html".format(month_start.strftime('%Y_%m')), pd.date_range(month_start, month_start + pd.DateOffset(months=1), closed='left'))
+
 # for month_start in pd.date_range(pd.Timestamp(2019, 1, 1), pd.Timestamp(2019, 5, 1), freq='MS'): # MS is month start
 #     month_plots(df, "{}.html".format(month_start.strftime('%Y_%m')), pd.date_range(month_start, month_start + pd.DateOffset(months=1), closed='left'))
 
 #plot(df, interesting_date, write_file=False)
 #plt.show()
 
-interesting_dates = [
-    pd.Timestamp(2019, 4, 4),
-    pd.Timestamp(2019, 5, 27),
-    pd.Timestamp(2019, 2, 1),
-    pd.Timestamp(2019, 3, 3),
-    pd.Timestamp(2019, 3, 10),
-]
-for date in interesting_dates:
-    plot(df, date, write_file=True, small=False)
+# interesting_dates = [
+#     pd.Timestamp(2019, 4, 4),
+#     pd.Timestamp(2019, 5, 27),
+#     pd.Timestamp(2019, 2, 1),
+#     pd.Timestamp(2019, 3, 3),
+#     pd.Timestamp(2019, 3, 10),
+# ]
+# for date in interesting_dates:
+#     plot(df, date, write_file=True, small=False)
