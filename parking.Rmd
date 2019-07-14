@@ -22,8 +22,10 @@ Our key findings are:
 2. Most tickets are sold between 12 and 1pm.
 3. Saturdays are the busiest day of the week, with 15% more tickets being sold than Fridays (the next busiest day).
 4. The car park is very likely to be overcrowded on Saturdays and Bank Holidays, especially in good weather.
-5. Monthly usage increases through the year, with May being 50% busier than January.
-6. An average of 25 all day tickets are sold every day, which is 20% of the car park capacity.
+5. Monthly usage increases through the year, with May being 50% busier than January (in 2019).
+6. Monthly usage is increasing year on year (e.g. May 2019 was busier than May 2018).
+7. An average of 23 all day tickets are sold every day, which is 18% of the car park capacity.
+8. In the financial year 2018-19, an average of 200 tickets were sold every day. An average of 0.6 penalty charge notices were issued per day for Crickhowell car park over the same period. The maximum issued in one day was 5. These low numbers do not provide evidence that parking contraventions are a significant problem.
 
 ## Approach
 
@@ -206,4 +208,14 @@ ggplot(carpark, aes(hour)) +
   geom_histogram(binwidth=1) +
   facet_wrap(~ day, ncol=4)
 ```
+
+Average number of tickets sold per day in financial year 2017-18:
+
+```{r}
+carpark %>% filter(date >= '2018-04-01') %>% filter(date < '2019-04-01') %>% tally() / 365
+```
+
+This compares to 213 penalty charge notices (PCNs) issued over the same period in Crickhowell car park, an average of 0.6 per day, (maximum 5 on one day).
+
+
 

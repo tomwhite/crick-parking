@@ -1,0 +1,57 @@
+---
+title: "Crickhowell PCN Analysis"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r include = FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Appendix: Statistical Analysis
+
+```{r message=FALSE, warning=FALSE}
+
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(scales)
+library(stringr)
+library(tidyr)
+library(knitr)
+library(readr)
+library(purrr)
+
+pcn_raw <- list.files("data/pcn", pattern = "*.csv") %>% 
+    map_df(~read_csv(paste0("data/pcn/", .)))
+
+pcn <- pcn_raw %>%
+  mutate(dt = dmy(IssueDate))
+```
+
+What are the most common contraventions?
+
+```{r}
+kable(pcn %>% group_by(ContraventionDescriptionShort, ContraventionCode) %>% tally(sort = TRUE))
+```
+
+Breakdown by area:
+
+```{r}
+kable(pcn %>% group_by(ParentLocationDescriptionShort) %>% tally(sort = TRUE))
+```
+
+Locations within Crickhowell:
+
+```{r}
+kable(pcn %>% filter(ParentLocationDescriptionShort == 'CRICKHOWELL') %>% group_by(LocationTypeDescription) %>% tally(sort = TRUE))
+```
+
+Crickhowell car park notices over time:
+
+```{r}
+kable(pcn %>% filter(ParentLocationDescriptionShort == 'CRICKHOWELL') %>% filter(LocationTypeDescription == 'Car Park') %>% group_by(dt) %>% tally())
+```
+
