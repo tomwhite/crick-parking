@@ -9,7 +9,7 @@ output:
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-_Tom White, October 2023_
+_Tom White and Eliane Wigzell, October 2023_
 
 We analysed ticket data for the two machines in Crickhowell's Long Stay car park from September 2017 to September 2023 that we received from Powys County Council.
 
@@ -141,6 +141,31 @@ carpark %>%
   scale_x_continuous(breaks = 1:12)
 ```
 
+To see how revenue would compare if the 1 hour tariff had been retained, we took the sales for May 2022 and applied the new May 2023 prices to them, including a £1.40 charge for the 1 hour tariff (which is what it is for Powys Short Stay car parks). This assumes that sales for 2023 were broadly the same as 2022, which they were for the first four months of the year.
+
+The projected revenue for May 2023 using this method is £32,866, which is less than the actual revenue in May 2023 of £35,202.
+
+By abolishing the 1 hour tariff Powys County Council have increased revenue, at the expense of the number of vistors to the car park, and possibly to the shops and other amenities of Crickhowell.
+
+```{r message=FALSE, warning=FALSE, results='hide'}
+carpark %>%
+  filter(date >= "2022-05-01" & date < "2022-06-01") %>%
+  mutate(revenue=parse_number(Cash)) %>%
+  mutate(projected_revenue_2023=case_when(
+    revenue == 1 ~ 1.40,
+    revenue == 2 ~ 2.50,
+    revenue == 3 ~ 3.25,
+    revenue == 4 ~ 4.00,
+    TRUE ~ revenue
+  )) %>%
+  summarise(total_projected_revenue_2023=sum(projected_revenue_2023))
+
+carpark %>%
+  filter(date >= "2023-05-01" & date < "2023-06-01") %>%
+  mutate(revenue=parse_number(Cash)) %>%
+  summarise(total_revenue=sum(revenue))
+```
+
 ### Tickets sold by day of week
 
 Saturday is by far the busiest day on average, followed by Friday. Sunday is the quietest day. 
@@ -182,7 +207,7 @@ carpark %>%
   geom_histogram(fill="black", col="grey", stat="count")
 ```
 
-If we break down 2023 sales by month we can see the shift from 1 to 2 hour tickets frome May onwards as it was no longer possible to buy 1 hour tickets.
+If we break down 2023 sales by month we can see the shift from 1 to 2 hour tickets from May onwards as it was no longer possible to buy 1 hour tickets.
 
 ```{r message=FALSE, warning=FALSE}
 carpark %>%
