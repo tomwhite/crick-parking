@@ -1,0 +1,194 @@
+---
+title: "Crickhowell Car Park Stats"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r include = FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+_Tom White, October 2023_
+
+We analysed ticket data for the two machines in Crickhowell's Long Stay car park from September 2017 to September 2023 that we received from Powys County Council.
+
+We didn't receive data covering the period June 2019 to December 2020, so that period is missing from the following analysis.
+
+
+```{r message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(scales)
+library(stringr)
+library(tidyr)
+library(knitr)
+library(readr)
+library(purrr)
+
+carpark_raw <- list.files("data", pattern = "*.csv") %>% 
+  map_df(~read_csv(paste0("data/", .)))
+
+fix_duration <- function(x) {
+  case_when(
+    x == "1h" ~ "1 Hour",
+    x == "2h" ~ "2 Hour",
+    x == "4h" ~ "4 Hour",
+    x == "AD" ~ "All Day",
+    TRUE ~ x
+  )
+}
+
+duration_from_tariff <- function(tariff) {
+  tariff_class <- substring(tariff, 4)
+  case_when(
+    tariff_class %in% c("A", "AE") ~ "1 Hour",
+    tariff_class %in% c("B", "AF") ~ "2 Hour",
+    tariff_class %in% c("C", "AG") ~ "4 Hour",
+    tariff_class %in% c("D", "AH") ~ "All Day",
+  )
+}
+
+duration_from_description <- function(description) {
+  duration <- str_extract(description, "(\\d Hour|\\dh|All Day|AD|Overnight|\\dd)")
+  duration <- fix_duration(duration)
+  return(duration)
+}
+
+
+carpark <- carpark_raw %>%
+  distinct() %>% # drop duplicates since in June 2018 one ticket machine had all of its entries repeated
+  mutate(Description.1 = Description_1) %>%
+  mutate(dt = dmy_hm(Date)) %>%
+  mutate(date = lubridate::date(dt)) %>%
+  mutate(day = weekdays(dt)) %>%
+  mutate(hour = hour(dt)) %>%
+  mutate(month = month(dt)) %>%
+  mutate(year = year(dt)) %>%
+  filter(date >= "2017-09-01") %>% # filter out since some car parks logged the ticket putting it into the wrong category
+  filter(date < "2023-09-01") %>% # filter out since we don't have the full month's data
+  select(-c(Description_1, X6, X7)) %>%
+  mutate(duration = if_else(is.na(Description.1), duration_from_tariff(Tariff), duration_from_description(Description.1))) %>%
+  mutate(price = parse_number(str_extract(Description.1, "£\\d.\\d\\d")))
+
+carpark$day <- factor(carpark$day, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))
+
+# Uncomment the following line to write processed data to a local CSV file
+# write_csv(carpark, "data/processed.csv")
+
+tariffs <- carpark %>% group_by(Tariff, Description.1) %>% summarise(count=n(), min_cash=min(Cash), first_date=min(date), last_date = max(date), cash_values = toString(unique(Cash)))
+tariff_classes <- carpark %>% mutate(Tariff_class = substring(Tariff, 4)) %>% group_by(Tariff_class) %>% summarise(count=n(), descriptions = toString(unique(Description.1)), durations = toString(unique(duration)))
+
+```
+
+### Ticket prices
+
+Ticket prices were increased in 2019, and most recently in May 2023. From May 2023 the 1 hour tariff was removed.
+
+| Code | Vehicle | Duration | 2017 price | 2019 price | 2023 price |
+| ---- | ------- | -------- | ---------- | ---------- | ---------- |
+| A    | Car     | 1 hour   | £0.70      | £1.00      | N/A        |
+| B    | Car     | 2 hour   | £1.30      | £2.00      | £2.50      |
+| C    | Car     | 4 hour   | £2.50      | £3.00      | £3.25      |
+| D    | Car     | All day  | £3.20      | £4.00      | £4.00      |
+
+The following chart shows the average payment for a ticket (averaged over all tickets for a month), which clearly shows the price increases.
+
+```{r message=FALSE, warning=FALSE}
+carpark %>%
+  mutate(year = as.factor(year)) %>%
+  group_by(month, year) %>%
+  summarize(`Average payment`=mean(parse_number(Cash))) %>%
+  complete(month, year) %>% # https://stackoverflow.com/questions/11020437/consistent-width-for-geom-bar-in-the-event-of-missing-data
+  ggplot() +
+  geom_line(aes(x=month, y=`Average payment`, color=year)) +
+  scale_x_continuous(breaks = 1:12)
+```
+
+
+### Number of tickets sold by month and year
+
+There was a big increase in car park usage in summer 2021 to levels that were *above* those before the pandemic. But then in 2022 usage went back to roughly pre-pandemic levels.
+
+The May 2023 price increase is clearly visible in the data. In all previous years the May sales were bigger than April, but not for 2023. This suggests that people used the car park less because of the price increase or removal of the 1 hour tariff.
+
+```{r message=FALSE, warning=FALSE}
+carpark %>%
+  mutate(year = as.factor(year)) %>%
+  group_by(month, year) %>%
+  summarize(count=n()) %>%
+  complete(month, year) %>% # https://stackoverflow.com/questions/11020437/consistent-width-for-geom-bar-in-the-event-of-missing-data
+  ggplot() +
+  geom_line(aes(x=month, y=count, color=year)) +
+  scale_x_continuous(breaks = 1:12)
+```
+
+### Revenue
+
+Despite selling fewer tickets after the 2023 tariff change, revenue was up (and at record levels for some months).
+
+(Note that there is no line for 2019 since the data supplied to us had no cash column for that year.)
+
+```{r message=FALSE, warning=FALSE}
+carpark %>%
+  mutate(year = as.factor(year)) %>%
+  group_by(month, year) %>%
+  summarize(income=sum(parse_number(Cash))) %>%
+  complete(month, year) %>% # https://stackoverflow.com/questions/11020437/consistent-width-for-geom-bar-in-the-event-of-missing-data
+  ggplot() +
+  geom_line(aes(x=month, y=income, color=year)) +
+  scale_x_continuous(breaks = 1:12)
+```
+
+### Tickets sold by day of week
+
+Saturday is by far the busiest day on average, followed by Friday. Sunday is the quietest day. 
+
+```{r message=FALSE, warning=FALSE}
+carpark %>%
+  ggplot(aes(day)) +
+  geom_histogram(fill="black", col="grey", stat="count")
+```
+
+Restricting to 2023, the story is the same, except Tuesdays are slightly more popular than Thursdays.
+
+```{r message=FALSE, warning=FALSE}
+carpark %>%
+  filter(date > "2023-01-01") %>%
+  ggplot(aes(day)) +
+  geom_histogram(fill="black", col="grey", stat="count")
+```
+
+### Tickets sold by hour of day
+
+Most tickets are sold between midday and 1pm.
+
+```{r message=FALSE, warning=FALSE}
+carpark %>%
+  ggplot(aes(hour)) +
+  geom_histogram(binwidth=1, fill="black", col="grey")
+```
+
+### Tickets sold by type
+
+Before the 2023 tariff changes the 1 hour ticket was the most popular:
+
+```{r message=FALSE, warning=FALSE}
+carpark %>%
+  filter(date < "2023-04-25") %>%
+  filter(duration %in% c("1 Hour", "2 Hour", "4 Hour", "All Day")) %>%
+  ggplot(aes(duration)) +
+  geom_histogram(fill="black", col="grey", stat="count")
+```
+
+If we break down 2023 sales by month we can see the shift from 1 to 2 hour tickets frome May onwards as it was no longer possible to buy 1 hour tickets.
+
+```{r message=FALSE, warning=FALSE}
+carpark %>%
+  filter(date >= "2023-01-01") %>%
+  filter(duration %in% c("1 Hour", "2 Hour", "4 Hour", "All Day")) %>%
+  ggplot(aes(duration)) +
+  facet_wrap(~ month, ncol=4) +
+  geom_histogram(fill="black", col="grey", stat="count")
+```
