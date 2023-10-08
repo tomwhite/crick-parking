@@ -143,9 +143,11 @@ carpark %>%
 
 To see how revenue would compare if the 1 hour tariff had been retained, we took the sales for May 2022 and applied the new May 2023 prices to them, including a £1.40 charge for the 1 hour tariff (which is what it is for Powys Short Stay car parks). This assumes that sales for 2023 were broadly the same as 2022, which they were for the first four months of the year.
 
-The projected revenue for May 2023 using this method is £32,866, which is less than the actual revenue in May 2023 of £35,202.
+The projected revenue for May 2023 using this method is £32,866, which is less than the actual revenue in May 2023 of £35,202. 
 
-By abolishing the 1 hour tariff Powys County Council have increased revenue, at the expense of the number of vistors to the car park, and possibly to the shops and other amenities of Crickhowell.
+By abolishing the 1 hour tariff Powys County Council have increased revenue (by 24% compared to May 2022), at the expense of the number of vistors to the car park, and possibly to the shops and other amenities of Crickhowell.
+
+However, by keeping the 1 hour tariff Powys could have still increased revenue by 16% (from £28,428 in May 2022) without impacting visitor numbers.
 
 ```{r message=FALSE, warning=FALSE, results='hide'}
 carpark %>%
@@ -159,6 +161,11 @@ carpark %>%
     TRUE ~ revenue
   )) %>%
   summarise(total_projected_revenue_2023=sum(projected_revenue_2023))
+
+carpark %>%
+  filter(date >= "2022-05-01" & date < "2022-06-01") %>%
+  mutate(revenue=parse_number(Cash)) %>%
+  summarise(total_revenue=sum(revenue))
 
 carpark %>%
   filter(date >= "2023-05-01" & date < "2023-06-01") %>%
