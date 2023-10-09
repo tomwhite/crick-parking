@@ -183,78 +183,22 @@ def month_plots(df, file_name, date_range):
         """)
 
 
-# Load data
-all_files = glob.glob("data/*.csv")
-# all_files = ["~/Downloads/Transaction Report 010119 to 310519.csv"]
-li = [pd.read_csv(filename, parse_dates=["Date"], dayfirst=True) for filename in all_files]
-df = pd.concat(li, axis=0, ignore_index=True, sort=False)
+if __name__ == "__main__":
+    df = pd.read_csv("data/processed/processed.csv", parse_dates=["Date"], dayfirst=True)
+    # df = pd.read_pickle("data/processed/processed.pickle")
 
-# drop duplicates since in June 2018 one ticket machine had all of its entries repeated
-df = df.drop_duplicates()
+    # filter out unknown durations
+    df = df[df["duration"].isin(["1 Hour", "2 Hour", "4 Hour", "All Day"])]
 
-# filter out overnight
-df = df[~df['Tariff'].isin(['105DA', '105M', '105U'])]
+    # sort by date (there are two ticket machines, so input isn't chronological)
+    df = df.sort_values(by=["Date"])
 
-# add ticket duration
-df = df[df['Description.1'].notnull()]
-df['duration'] = df['Description.1'].str.extract('(1 Hour|2 Hour|4 Hour|All Day)', expand=True)
-df = df[df['duration'].notnull()]
+    # df.to_pickle("data/processed/processed.pickle")
 
-# sort by date (there are two ticket machines, so input isn't chronological)
-df = df.sort_values(by=["Date"])
+    # for month_start in pd.date_range(pd.Timestamp(2017, 9, 1), pd.Timestamp(2019, 5, 1), freq='MS'): # MS is month start
+    #     print(month_start)
+    #     month_plots(df, "new/{}.html".format(month_start.strftime('%Y_%m')), pd.date_range(month_start, month_start + pd.DateOffset(months=1), closed='left'))
 
-# Show ticket duration counts
-x = df.groupby(['duration']).size().reset_index(name='counts')
-print(x)
-
-# print(df)
-#
-# print(df.info())
-#
-# df['hour'] = df['Date'].apply(lambda x: x.hour)
-#
-# print(df)
-#
-# #sns.distplot(df['hour'], hist=True, kde=False, bins=24, hist_kws={'edgecolor':'black'})
-#
-# sns.countplot(x="hour", data=df)
-#
-# plt.show()
-#
-# import sys
-# sys.exit(1)
-
-# Interesting dates
-interesting_date = pd.Timestamp(2019, 2, 10) # Sunday; filled up v quickly, then sales stopped suddenly
-interesting_date = pd.Timestamp(2019, 5, 4) # max capacity
-interesting_date = pd.Timestamp(2019, 4, 4) # boring Thursday in April
-
-# # Find the date on which the max occupancy occurred
-# r = pd.date_range(pd.Timestamp(2019, 1, 1), pd.Timestamp(2019, 5, 10))
-# date_of_max = max(r, key=lambda date: max_for_date(df, date))
-# print(date_of_max, max_for_date(df, date_of_max))
-
-# # Find number of ticket sales in midday 30 min slot
-# for date in r:
-#     rolling = get_rolling(df, date)
-#     print(date, get_tickets_in_window(rolling, date))
-
-for month_start in pd.date_range(pd.Timestamp(2017, 9, 1), pd.Timestamp(2017, 12, 1), freq='MS'): # MS is month start
-    print(month_start)
-    month_plots(df, "{}.html".format(month_start.strftime('%Y_%m')), pd.date_range(month_start, month_start + pd.DateOffset(months=1), closed='left'))
-
-# for month_start in pd.date_range(pd.Timestamp(2019, 1, 1), pd.Timestamp(2019, 5, 1), freq='MS'): # MS is month start
-#     month_plots(df, "{}.html".format(month_start.strftime('%Y_%m')), pd.date_range(month_start, month_start + pd.DateOffset(months=1), closed='left'))
-
-#plot(df, interesting_date, write_file=False)
-#plt.show()
-
-# interesting_dates = [
-#     pd.Timestamp(2019, 4, 4),
-#     pd.Timestamp(2019, 5, 27),
-#     pd.Timestamp(2019, 2, 1),
-#     pd.Timestamp(2019, 3, 3),
-#     pd.Timestamp(2019, 3, 10),
-# ]
-# for date in interesting_dates:
-#     plot(df, date, write_file=True, small=False)
+    for month_start in pd.date_range(pd.Timestamp(2021, 1, 1), pd.Timestamp(2023, 8, 1), freq='MS'): # MS is month start
+        print(month_start)
+        month_plots(df, "{}.html".format(month_start.strftime('%Y_%m')), pd.date_range(month_start, month_start + pd.DateOffset(months=1), closed='left'))
