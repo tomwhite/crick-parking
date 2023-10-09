@@ -75,7 +75,7 @@ carpark <- carpark_raw %>%
 carpark$day <- factor(carpark$day, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))
 
 # Uncomment the following line to write processed data to a local CSV file
-# write_csv(carpark, "data/processed.csv")
+# write_csv(carpark, "data/processed/processed.csv")
 
 tariffs <- carpark %>% group_by(Tariff, Description.1) %>% summarise(count=n(), min_cash=min(Cash), first_date=min(date), last_date = max(date), cash_values = toString(unique(Cash)))
 tariff_classes <- carpark %>% mutate(Tariff_class = substring(Tariff, 4)) %>% group_by(Tariff_class) %>% summarise(count=n(), descriptions = toString(unique(Description.1)), durations = toString(unique(duration)))
@@ -109,9 +109,10 @@ carpark %>%
 
 ### Number of tickets sold by month and year
 
-There was a big increase in car park usage in summer 2021 to levels that were *above* those before the pandemic. But then in 2022 usage went back to roughly pre-pandemic levels.
+There was a big increase in car park usage in summer 2021 from earlier in the year to roughly pre-pandemic levels. Then in 2022 usage dropped back to around or below pre-pandemic levels.
 
-The May 2023 price increase is clearly visible in the data. In all previous years the May sales were bigger than April, but not for 2023. This suggests that people used the car park less because of the price increase or removal of the 1 hour tariff.
+The sales for 2023 to date are very similar to those of 2022. In particular, there is no noticeable drop off in
+May 2023 as a result of the tariff changes.
 
 ```{r message=FALSE, warning=FALSE}
 carpark %>%
@@ -126,7 +127,7 @@ carpark %>%
 
 ### Revenue
 
-Despite selling fewer tickets after the 2023 tariff change, revenue was up (and at record levels for some months).
+After the 2023 tariff change revenue was markedly up compared to 2022.
 
 (Note that there is no line for 2019 since the data supplied to us had no cash column for that year.)
 
@@ -143,11 +144,11 @@ carpark %>%
 
 To see how revenue would compare if the 1 hour tariff had been retained, we took the sales for May 2022 and applied the new May 2023 prices to them, including a £1.40 charge for the 1 hour tariff (which is what it is for Powys Short Stay car parks). This assumes that sales for 2023 were broadly the same as 2022, which they were for the first four months of the year.
 
-The projected revenue for May 2023 using this method is £32,866, which is less than the actual revenue in May 2023 of £35,202. 
+The projected revenue for May 2023 using this method is £15,037, which is less than the actual revenue in May 2023 of £17,601.
 
-By abolishing the 1 hour tariff Powys County Council have increased revenue (by 24% compared to May 2022), at the expense of the number of vistors to the car park, and possibly to the shops and other amenities of Crickhowell.
+By abolishing the 1 hour tariff Powys County Council have increased revenue (by 34% compared to £13,155 in May 2022), at the expense of the number of visitors to the car park, and possibly to the shops and other amenities of Crickhowell.
 
-However, by keeping the 1 hour tariff Powys could have still increased revenue by 16% (from £28,428 in May 2022) without impacting visitor numbers.
+However, by keeping the 1 hour tariff Powys could have still increased revenue by 14% (from £13,155 to £15,037) without impacting visitor numbers.
 
 ```{r message=FALSE, warning=FALSE, results='hide'}
 carpark %>%
@@ -204,7 +205,7 @@ carpark %>%
 
 ### Tickets sold by type
 
-Before the 2023 tariff changes the 1 hour ticket was the most popular:
+Before the 2023 tariff changes the 2 hour ticket was the most popular, closely followed by the 1 hour ticket:
 
 ```{r message=FALSE, warning=FALSE}
 carpark %>%
@@ -214,7 +215,7 @@ carpark %>%
   geom_histogram(fill="black", col="grey", stat="count")
 ```
 
-If we break down 2023 sales by month we can see the shift from 1 to 2 hour tickets from May onwards as it was no longer possible to buy 1 hour tickets.
+If we break down 2023 sales by month we can see the shift from 1 to 2 hour tickets from late April onwards as it was no longer possible to buy 1 hour tickets.
 
 ```{r message=FALSE, warning=FALSE}
 carpark %>%
